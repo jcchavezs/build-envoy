@@ -1,0 +1,27 @@
+name: Build envoy
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: SHA of the commit
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Clone envoy
+        uses: actions/checkout@v2
+        with:
+          repository: envoyproxy/envoy
+          path: src/envoy
+          ref: ${{ github.event.inputs.version }}
+
+      - run: |
+          ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release'
+          ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release.server_only'
+          docker build -f ci/Dockerfile-envoy -t envoy .
