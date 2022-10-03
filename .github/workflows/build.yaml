@@ -8,7 +8,7 @@ on:
         required: true
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +22,7 @@ jobs:
           ref: ${{ github.event.inputs.version }}
 
       - run: |
-          ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release'
-          ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release.server_only'
+          cd src/envoy && \
+          ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release' && \
+          ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release.server_only' && \
           docker build -f ci/Dockerfile-envoy -t envoy .
