@@ -6,6 +6,7 @@ on:
       commit_sha:
         description: SHA of the commit
         required: true
+        type: string
 
 jobs:
   build:
@@ -21,8 +22,20 @@ jobs:
           path: src/envoy
           ref: ${{ github.event.inputs.version }}
 
+      - name: Get envoy SHA
+        id: envoy-commit
+        shell: bash
+        run: |
+          cd ./src/envoy
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
       - run: |
           cd src/envoy && \
           ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release' && \
           ./ci/run_envoy_docker.sh './ci/do_ci.sh bazel.release.server_only' && \
-          docker build -f ci/Dockerfile-envoy -t envoy .
+          docker build -f ci/Dockerfile-envoy -t ghcr.io/jcchavezs/envoy:${{ steps.envoy-commit.outputs.sha_short }} .
+
+      - run: docker push ghcr.io/jcchavezs/envoy:${{ steps.envoy-commit.outputs.sha_short }}
